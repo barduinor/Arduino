@@ -48,6 +48,8 @@
 #define MY_BAUD_RATE 115200
 #endif
 
+// Disables over-the-air reset of node
+//#define MY_DISABLE_REMOTE_RESET
 
 /**********************************
 *  Radio selection and node config
@@ -71,6 +73,13 @@
 
 // Enables repeater functionality (relays messages from other nodes)
 // #define MY_REPEATER_FEATURE
+
+// The wait period before going to sleep when using smartSleep-functions
+// This period has to be long enough for controller to be able to send out
+// potential buffered messages.
+#ifndef MY_SMART_SLEEP_WAIT_DURATION
+#define MY_SMART_SLEEP_WAIT_DURATION 500
+#endif
 
 /**********************************
 *  Over the air firmware updates
