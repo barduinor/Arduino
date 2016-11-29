@@ -2,7 +2,7 @@
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
- * repeater and gateway builds a routing tables in EEPROM which keeps track of the
+ * repeater and gateway builds a routing tables in RAM or EEPROM which keeps track of the
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
@@ -67,6 +67,15 @@
 #ifndef MY_BAUD_RATE
 #define MY_BAUD_RATE 115200
 #endif
+ /**
+ * @def MY_SERIAL_OUTPUT_SIZE
+ * @brief Max. characters for serial output.
+ */
+#ifndef MY_SERIAL_OUTPUT_SIZE
+#define MY_SERIAL_OUTPUT_SIZE (120u)
+#endif
+
+
 
 // Disables over-the-air reset of node
 //#define MY_DISABLE_REMOTE_RESET
@@ -79,20 +88,57 @@
 
 //#define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
+//#define MY_RADIO_RFM95
 //#define MY_RS485
 
 /**
+* @def MY_RAM_ROUTING_TABLE_FEATURE
+* @brief If enabled, the routing table is kept in RAM (if memory allows) and saved in regular intervals.
+* note: AVR has limited memory, use with care
+*/
+#define MY_RAM_ROUTING_TABLE_FEATURE
+
+/**
+* @def MY_ROUTING_TABLE_SAVE_INTERVAL_MS
+* @brief Interval to dump content of routing table to eeprom
+*/
+#ifndef MY_ROUTING_TABLE_SAVE_INTERVAL_MS
+#define MY_ROUTING_TABLE_SAVE_INTERVAL_MS	(10*60*1000ul)
+#endif
+/**
 * @def MY_TRANSPORT_SANITY_CHECK
-* @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure. This feature is enabled for all repeater nodes (incl. GW)
+* @brief If enabled, node will check transport in regular intervals to detect HW issues and re-initialize in case of failure. 
+* This feature is enabled for all repeater nodes (incl. GW)
 */
 //#define MY_TRANSPORT_SANITY_CHECK
+
 /**
-* @def MY_TRANSPORT_SANITY_CHECK_INTERVAL
+* @def MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
 * @brief Interval (in ms) of transport sanity checks
 */
-#ifndef MY_TRANSPORT_SANITY_CHECK_INTERVAL
-#define MY_TRANSPORT_SANITY_CHECK_INTERVAL ((uint32_t)60000)
+#ifndef MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
+#define MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS (60*1000ul)
 #endif
+/**
+* @def MY_TRANSPORT_DISCOVERY_INTERVAL_MS
+* @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks 
+*/
+#ifndef MY_TRANSPORT_DISCOVERY_INTERVAL_MS
+#define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (10*60*1000ul)
+#endif
+
+/**
+ *@def MY_TRANSPORT_UPLINK_CHECK_DISABLED
+ *@brief If set, uplink check to GW is disabled during transport initialisation
+ */
+//#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
+
+/**
+ *@def MY_TRANSPORT_MAX_TX_FAILURES
+ *@brief Set to override max. consecutive TX failures until SNP is initiated
+ */
+//#define MY_TRANSPORT_MAX_TX_FAILURES (10u)
+
 /**
  * @def MY_REGISTRATION_FEATURE
  * @brief If enabled, node has to register to gateway/controller before allowed to send sensor data.
@@ -105,14 +151,13 @@
  */
 
 #ifndef MY_REGISTRATION_RETRIES
-#define MY_REGISTRATION_RETRIES 3
+#define MY_REGISTRATION_RETRIES (3u)
 #endif
 
  /**
  * @def MY_REGISTRATION_DEFAULT
- * @brief Node registration default - this applies if no registration response is recieved from controller
+ * @brief Node registration default - this applies if no registration response is received from controller
  */
-
 #define MY_REGISTRATION_DEFAULT true
 
  /**
@@ -126,6 +171,14 @@
  * @brief If enabled, library compatibility is checked during node registration. Incompatible libraries are unable to send sensor data.
  */
 #define MY_CORE_COMPATIBILITY_CHECK
+
+ /**
+* @def MY_TRANSPORT_WAIT_READY_MS
+* @brief Timeout in MS until transport is ready during startup, set to 0 for no timeout
+*/
+#ifndef MY_TRANSPORT_WAIT_READY_MS
+#define MY_TRANSPORT_WAIT_READY_MS (0ul)
+#endif
 
 /**
  * @def MY_NODE_ID
@@ -149,8 +202,11 @@
  */
 //#define MY_PARENT_NODE_IS_STATIC
 
-// Enables repeater functionality (relays messages from other nodes)
-// #define MY_REPEATER_FEATURE
+/**
+* @def MY_REPEATER_FEATURE
+* @brief Enables repeater functionality (relays messages from other nodes)
+*/
+//#define MY_REPEATER_FEATURE
 
 /**
 * @def MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS
@@ -207,7 +263,7 @@
  * @brief Max buffersize needed for messages coming from controller.
  */
 #ifndef MY_GATEWAY_MAX_RECEIVE_LENGTH
-#define MY_GATEWAY_MAX_RECEIVE_LENGTH 100
+#define MY_GATEWAY_MAX_RECEIVE_LENGTH (100u)
 #endif
 
 /**
@@ -215,7 +271,7 @@
  * @brief Max buffer size when sending messages.
  */
 #ifndef MY_GATEWAY_MAX_SEND_LENGTH
-#define MY_GATEWAY_MAX_SEND_LENGTH 120
+#define MY_GATEWAY_MAX_SEND_LENGTH (120u)
 #endif
 
 /**
@@ -223,7 +279,7 @@
  * @brief Max number of parallel clients (sever mode).
  */
 #ifndef MY_GATEWAY_MAX_CLIENTS
-#define MY_GATEWAY_MAX_CLIENTS 1
+#define MY_GATEWAY_MAX_CLIENTS (1u)
 #endif
 
 
@@ -322,6 +378,15 @@
 //#define MY_SIGNING_REQUEST_SIGNATURES
 
 /**
+ * @def MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
+ * @brief Enable this to have gateway require all nodes in the network to sign messages sent to it. @ref MY_SIGNING_REQUEST_SIGNATURES must also be set.
+ *
+ * Use this for maximum security, but be aware that every single node will have to be personalized before they can be used.
+ * Note that if this is enabled, and whitelisting is also enabled, whitelisting will also be in effect for all nodes.
+ */
+//#define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
+
+/**
  * @def MY_VERIFICATION_TIMEOUT_MS
  * @brief Define a suitable timeout for a signature verification session
  *
@@ -387,6 +452,18 @@
 #define MY_RS485_MAX_MESSAGE_LENGTH 40
 #endif
 
+/**
+ * @def MY_RS485_DE_PIN
+ * @brief RS485 driver enable pin.
+ */
+//#define MY_RS485_DE_PIN 2
+
+/**
+ * @def MY_RS485_HWSERIAL
+ * @brief Enable this if RS485 is connected to a hardware serial port.
+ */
+//#define MY_RS485_HWSERIAL Serial1
+
 /**********************************
 *  NRF24L01P Driver Defaults
 ***********************************/
@@ -415,6 +492,8 @@
 		#define MY_RF24_CE_PIN 4
 	#elif defined(ARDUINO_ARCH_SAMD)
 		#define MY_RF24_CE_PIN 27
+	#elif defined(LINUX_ARCH_RASPBERRYPI)
+		#define MY_RF24_CE_PIN 22
 	#else
 		#define MY_RF24_CE_PIN 9
 	#endif
@@ -429,6 +508,8 @@
 		#define MY_RF24_CS_PIN 15
 	#elif defined(ARDUINO_ARCH_SAMD)
 		#define MY_RF24_CS_PIN 3
+	#elif defined(LINUX_ARCH_RASPBERRYPI)
+		#define MY_RF24_CS_PIN 24
 	#else
 		#define MY_RF24_CS_PIN 10
 	#endif
@@ -593,7 +674,7 @@
  */
 #ifndef MY_RF69_IRQ_NUM
 	#if defined(ARDUINO_ARCH_ESP8266)
-		#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
+		#define MY_RF69_IRQ_NUM RF69_IRQ_PIN
 	#else
 		#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
 	#endif
@@ -601,6 +682,87 @@
 
 // Enables RFM69 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
 //#define MY_RFM69_ENABLE_ENCRYPTION
+
+/**********************************
+*  RFM95 driver defaults
+***********************************/
+
+/**
+ * @def MY_RFM95_FREQUENCY
+ * @brief RFM95 frequency
+ *
+ * This must match the hardware version of the RFM95 radio.
+ */
+#ifndef MY_RFM95_FREQUENCY
+	#define MY_RFM95_FREQUENCY   (868.1f)
+#endif
+ /**
+ * @def MY_RFM95_MODEM_CONFIGRUATION
+ * @brief RFM95 modem configuration, see table
+ * 
+ * BW = Bandwidth in kHz
+ * CR = Error correction code
+ * SF = Spreading factor, chips / symbol
+ *
+ * | CONFIG				    | BW    | CR  | SF   | Comment
+ * |------------------------|-------|-----|------|-----------------------------
+ * | RFM95_BW125CR45SF128   | 125   | 4/5 | 128  | Default, medium range
+ * | RFM95_BW500CR45SF128   | 500   | 4/5 | 128  | Fast, short range
+ * | RFM95_BW31_25CR48SF512 | 31.25 | 4/8 | 512  | Slow, long range
+ * | RFM95_BW125CR48SF4096  | 125   | 4/8 | 4096 | Slow, long range
+ *
+ */
+
+#ifndef MY_RFM95_MODEM_CONFIGRUATION
+	// default
+	#define MY_RFM95_MODEM_CONFIGRUATION RFM95_BW125CR45SF128
+#endif
+
+/**
+ * @def MY_RFM95_RST_PIN
+ * @brief RFM95 reset pin, uncomment if used
+ */
+//#define MY_RFM95_RST_PIN RFM95_RST_PIN
+
+/**
+ * @def MY_RFM95_IRQ_PIN
+ * @brief RFM95 IRQ pin
+ */
+#ifndef MY_RFM95_IRQ_PIN
+	#define MY_RFM95_IRQ_PIN RFM95_IRQ_PIN
+#endif
+
+/**
+ * @def MY_RFM95_SPI_CS
+ * @brief RFM95 SPI chip select pin
+ */
+#ifndef MY_RFM95_SPI_CS
+	#define MY_RFM95_SPI_CS RFM95_SPI_CS
+#endif
+
+/**
+ * @def MY_RFM95_TX_POWER
+ * @brief RFM95 TX power level.
+ */
+#ifndef MY_RFM95_TX_POWER
+	#define MY_RFM95_TX_POWER 13
+#endif
+
+ /**
+ * @def MY_RFM95_ATC_MODE_DISABLED
+ * @brief Enable to disable ATC mode
+ */
+//#define MY_RFM95_ATC_MODE_DISABLED
+
+ /**
+ * @def MY_RFM95_ATC_TARGET_RSSI
+ * @brief Traget RSSI level for ATC mode
+ */
+#ifndef MY_RFM95_ATC_TARGET_RSSI
+	#define MY_RFM95_ATC_TARGET_RSSI (-60)
+#endif
+
+
 
 /**************************************
 * Ethernet Gateway Transport  Defaults
@@ -610,6 +772,7 @@
 //#define MY_GATEWAY_W5100
 //#define MY_GATEWAY_ENC28J60
 //#define MY_GATEWAY_ESP8266
+//#define MY_GATEWAY_LINUX
 
 /**
  * @def MY_PORT
@@ -727,7 +890,49 @@
 #define MY_ESP8266_SERIAL_MODE SERIAL_FULL
 #endif
 
-/** @}*/ // ESP8266 Defaults
+/**************************************
+* Linux Settings
+***************************************/
+
+/**
+ * @def MY_LINUX_SERIAL_PORT
+ * @brief Serial device port
+ */
+#ifndef MY_LINUX_SERIAL_PORT
+#define MY_LINUX_SERIAL_PORT "/dev/ttyACM0"
+#endif
+
+/**
+ * @def MY_IS_SERIAL_PTY
+ * @brief Set serial as a pseudo terminal.
+ *
+ * Enable this if you need to connect to a controller running on the same device.
+ */
+//#define MY_IS_SERIAL_PTY
+
+/**
+ * @def MY_LINUX_SERIAL_PTY
+ * @brief Symlink name for the PTY device.
+ */
+#ifndef MY_LINUX_SERIAL_PTY
+#define MY_LINUX_SERIAL_PTY "/dev/ttyMySensorsGateway"
+#endif
+
+/**
+ * @def MY_LINUX_SERIAL_GROUPNAME
+ * @brief Grant access to the specified system group for the serial device.
+ */
+//#define MY_LINUX_SERIAL_GROUPNAME "tty"
+
+/**
+ * @def MY_LINUX_CONFIG_FILE
+ * @brief Set the filepath for the gateway config file
+ *
+ * For now the configuration file is only used to store the emulated eeprom state
+ */
+#ifndef MY_LINUX_CONFIG_FILE
+#define MY_LINUX_CONFIG_FILE "/etc/mysensors.dat"
+#endif
 
 #endif	// MyConfig_h
 
@@ -737,14 +942,21 @@
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
+#define MY_SIGNING_GW_REQUEST_SIGNATURES_FROM_ALL
 #define MY_SIGNING_NODE_WHITELISTING {{.nodeId = GATEWAY_ADDRESS,.serial = {0x09,0x08,0x07,0x06,0x05,0x04,0x03,0x02,0x01}}}
+#define MY_RS485_HWSERIAL
 #define MY_IS_RFM69HW
 #define MY_PARENT_NODE_IS_STATIC
 #define MY_REGISTRATION_CONTROLLER
+#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
 #define MY_DEBUG_VERBOSE_RF24
 #define MY_TRANSPORT_SANITY_CHECK
-#define MY_RF24_IRQ_PIN
 #define MY_RX_MESSAGE_BUFFER_FEATURE
 #define MY_RX_MESSAGE_BUFFER_SIZE
 #define MY_NODE_LOCK_FEATURE
+#define MY_REPEATER_FEATURE
+#define MY_LINUX_SERIAL_GROUPNAME
+#define MY_IS_SERIAL_PTY
+#define MY_RFM95_ATC_MODE_DISABLED
+#define MY_RFM95_RST_PIN
 #endif

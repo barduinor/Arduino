@@ -35,7 +35,6 @@
 #endif
 
 #define MY_SERIALDEVICE Serial
-#define MY_DEBUG_BUFFER_SIZE 300
 
 #if defined __AVR_ATmega328P__
 #ifndef sleep_bod_disable
@@ -58,28 +57,29 @@ do { 																\
 
 // Define these as macros to save valuable space
 
-#define hwDigitalWrite(__pin, __value) (digitalWrite(__pin, __value))
-#define hwInit() MY_SERIALDEVICE.begin(MY_BAUD_RATE)
+#define hwDigitalWrite(__pin, __value) digitalWriteFast(__pin, __value)
+#define hwDigitalRead(__pin) digitalReadFast(__pin)
+#define hwPinMode(__pin, __value) pinModeFast(__pin, __value)
+
+
+#if defined(MY_DISABLED_SERIAL)
+	#define hwInit()
+#else
+	#define hwInit() MY_SERIALDEVICE.begin(MY_BAUD_RATE)
+#endif
+
 #define hwWatchdogReset() wdt_reset()
 #define hwReboot() wdt_enable(WDTO_15MS); while (1)
 #define hwMillis() millis()
 #define hwRandomNumberInit() randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN))
-#define hwReadConfig(__pos) (eeprom_read_byte((uint8_t*)(__pos)))
-
-#ifndef eeprom_update_byte
-	#define hwWriteConfig(loc, val) if((uint8_t)(val) != eeprom_read_byte((uint8_t*)(loc))) { eeprom_write_byte((uint8_t*)(loc), (val)); }
-#else
-	#define hwWriteConfig(__pos, __value) (eeprom_update_byte((uint8_t*)(__pos), (__value)))
-#endif
-
-//
-#define hwReadConfigBlock(__buf, __pos, __length) (eeprom_read_block((__buf), (void*)(__pos), (__length)))
-#define hwWriteConfigBlock(__pos, __buf, __length) (eeprom_write_block((void*)(__pos), (void*)__buf, (__length)))
+#define hwReadConfig(__pos) eeprom_read_byte((uint8_t*)(__pos))
+#define hwWriteConfig(__pos, __val) eeprom_update_byte((uint8_t*)(__pos), (__val))
+#define hwReadConfigBlock(__buf, __pos, __length) eeprom_read_block((void*)(__buf), (void*)(__pos), (__length))
+#define hwWriteConfigBlock(__buf, __pos, __length) eeprom_update_block((void*)(__buf), (void*)(__pos), (__length))
 
 
 
-enum period_t
-{
+enum period_t {
 	SLEEP_15MS,
 	SLEEP_30MS,
 	SLEEP_60MS,
