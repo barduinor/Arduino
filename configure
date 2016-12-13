@@ -108,7 +108,6 @@ function detect_machine {
     fi
     local soc="unknown"
     local tp="unknown"
-    local rev="unknown"
 
     if [ -z "$cpu" ]; then
         cpu="unknown"
@@ -119,13 +118,12 @@ function detect_machine {
         soc="BCM2835"
         if [[ $machine == "Raspberry"* ]]; then
             tp="RPi"
-            rev=($(detect_rpi_revision))
         fi
         ;;
     BCM2709)
         soc="BCM2836"
         if [[ $machine == "Raspberry"* ]]; then
-            rev=($(detect_rpi_revision))
+            local rev=($(detect_rpi_revision))
             if [[ $rev == "a02082" || $rev == "a22082" ]]; then
                 tp="RPi3"
             else
@@ -186,7 +184,7 @@ function detect_machine {
     *)
         soc="unknown"
     esac
-    echo "${soc} ${tp} ${cpu} ${rev}"
+    echo "${soc} ${tp} ${cpu}"
 }
 
 function gcc_cpu_flags {
@@ -238,6 +236,9 @@ for opt do
     --soc=*)
         SOC="$optarg"
         ;;
+    --platform-type=*)
+        PT="$optarg"
+        ;;
     --cpu-flags=*)
         CPUFLAGS="$optarg"
         ;;
@@ -270,6 +271,12 @@ for opt do
         ;;
     --prefix=*)
         PREFIX="$optarg"
+        ;;
+    --exec-prefix=*)
+        PREFIX="$optarg"
+        ;;
+    --no_init_system*)
+        NO_INIT="1"
         ;;
     --gateway-dir=*)
         GATEWAY_DIR="$optarg"
@@ -399,8 +406,7 @@ if [ -z "${SOC}" ]; then
     SOC=${info[0]}
     TYPE=${info[1]}
     CPU=${info[2]}
-    REV=${info[3]}
-    echo "[OK] machine detected: SoC=${SOC}, Type=${TYPE}, CPU=${CPU}, REV=${REV}."
+    echo "[OK] machine detected: SoC=${SOC}, Type=${TYPE}, CPU=${CPU}."
 fi
 
 if [ -z "${CPUFLAGS}" ]; then
@@ -409,10 +415,6 @@ fi
 
 if [[ $SOC == "BCM2835" || $SOC == "BCM2836" ]]; then
     CPPFLAGS="-DLINUX_ARCH_RASPBERRYPI $CPPFLAGS"
-fi
-
-if [[ $TYPE == "RPi2" || $TYPE == "RPi3" || $REV == "0010" ]]; then
-    CPPFLAGS="-D__RPI_BPLUS $CPPFLAGS"
 fi
 
 if [[ ${debug} == "enable" ]]; then
@@ -466,7 +468,9 @@ fi
 LDFLAGS="-pthread $LDFLAGS"
 CPPFLAGS="$CPUFLAGS $CPPFLAGS"
 
-if [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
+if [ "${NO_INIT}" ];  then
+    echo "[OK] no init system chosen."
+elif [ -x /usr/bin/systemctl ] || [ -x /bin/systemctl ]; then
     INIT_SYSTEM=systemd
     echo "[OK] init system detected: systemd"
 elif [ -f /etc/init.d/cron ] && [ ! -h /etc/init.d/cron ]; then
