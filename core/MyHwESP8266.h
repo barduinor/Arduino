@@ -25,13 +25,14 @@
 #include <Arduino.h>
 #endif
 
+#ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
+#endif
 
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 
 #define EEPROM_size (1024)
-
 
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
@@ -40,7 +41,7 @@
 #define hwWatchdogReset() wdt_reset()
 #define hwReboot() ESP.restart()
 #define hwMillis() millis()
-#define hwRandomNumberInit() randomSeed(analogRead(MY_SIGNING_SOFT_RANDOMSEED_PIN))
+#define hwRandomNumberInit() randomSeed(RANDOM_REG32)
 
 void hwInit(void);
 void hwReadConfigBlock(void* buf, void* adr, size_t length);

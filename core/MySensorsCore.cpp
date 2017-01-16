@@ -39,10 +39,10 @@ char _convBuf[MAX_PAYLOAD*2+1];
 void _callbackTransportReady(void)
 {
 	if (!_coreConfig.presentationSent) {
+#if !defined(MY_GATEWAY_FEATURE)	// GW calls presentNode() when client connected
 		presentNode();
-#if !defined(MY_GATEWAY_FEATURE)
-		_registerNode();
 #endif
+		_registerNode();
 		_coreConfig.presentationSent = true;
 	}
 }
@@ -96,7 +96,7 @@ void _begin(void)
 	// set defaults
 	_coreConfig.presentationSent = false;
 
-	// Call before() in sketch (if it exists)
+	// Call sketch before() (if defined)
 	if (before) {
 		CORE_DEBUG(PSTR("MCO:BGN:BFR\n"));	// before callback
 		before();
@@ -145,7 +145,7 @@ void _begin(void)
 	}
 #endif
 
-	// Call sketch setup
+	// Call sketch setup() (if defined)
 	if (setup) {
 		CORE_DEBUG(PSTR("MCO:BGN:STP\n"));	// setup callback
 		setup();
@@ -153,6 +153,8 @@ void _begin(void)
 #if defined(MY_SENSOR_NETWORK)
 	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=%d\n"), isTransportReady());
 #else
+	// no sensor network defined, call presentation & registration
+	_callbackTransportReady();
 	CORE_DEBUG(PSTR("MCO:BGN:INIT OK,TSP=NA\n"));
 #endif
 	// reset wdt before handing over to loop
@@ -223,32 +225,44 @@ void presentNode(void)
 
 uint8_t getNodeId(void)
 {
-#if defined(MY_SENSOR_NETWORK)
-	return transportGetNodeId();
+	uint8_t result;
+#if defined(MY_GATEWAY_FEATURE)
+	result = GATEWAY_ADDRESS;
+#elif defined(MY_SENSOR_NETWORK)
+	result = transportGetNodeId();
 #else
-	return 0xFF;
+	result = VALUE_NOT_DEFINED;
 #endif
+	return result;
 }
 
 uint8_t getParentNodeId(void)
 {
-#if defined(MY_SENSOR_NETWORK)
-	return transportGetParentNodeId();
+	uint8_t result;
+#if defined(MY_GATEWAY_FEATURE)
+	result = VALUE_NOT_DEFINED;	// GW doesn't have a parent
+#elif defined(MY_SENSOR_NETWORK)
+	result = transportGetParentNodeId();
 #else
-	return 0xFF;
+	result = VALUE_NOT_DEFINED;
 #endif
+	return result;
 }
 
 uint8_t getDistanceGW(void)
 {
-#if defined(MY_SENSOR_NETWORK)
-	return transportGetDistanceGW();
+	uint8_t result;
+#if defined(MY_GATEWAY_FEATURE)
+	result = 0;
+#elif defined(MY_SENSOR_NETWORK)
+	result = transportGetDistanceGW();
 #else
-	return 0xFF;
+	result = VALUE_NOT_DEFINED;
 #endif
+	return result;
 }
 
-controllerConfig_t getConfig(void)
+controllerConfig_t getControllerConfig(void)
 {
 	return _coreConfig.controllerConfig;
 }

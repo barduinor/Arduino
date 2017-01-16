@@ -24,22 +24,29 @@
 #include <pthread.h>
 #include "MyHw.h"
 #include "SerialPort.h"
+#include "SerialSimulator.h"
 
-#ifdef MY_IS_SERIAL_PTY
+#ifdef MY_GATEWAY_SERIAL
+#ifdef MY_LINUX_IS_SERIAL_PTY
 SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PTY, true);
 #else
 SerialPort Serial = SerialPort(MY_LINUX_SERIAL_PORT);
 #endif
+#else
+SerialSimulator Serial = SerialSimulator();
+#endif
 
+#ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
+#endif
 
 // Define these as macros (do nothing)
 #define hwWatchdogReset()
 #define hwReboot()
 
-#define hwDigitalWrite(__pin, __value) _Pragma("GCC error \"Not supported on linux-generic\"")
-#define hwDigitalRead(__pin) _Pragma("GCC error \"Not supported on linux-generic\"")
-#define hwPinMode(__pin, __value) _Pragma("GCC error \"Not supported on linux-generic\"")
+inline void hwDigitalWrite(uint8_t, uint8_t);
+inline int hwDigitalRead(uint8_t);
+inline void hwPinMode(uint8_t, uint8_t);
 
 void hwInit();
 inline void hwReadConfigBlock(void* buf, void* addr, size_t length);

@@ -32,7 +32,7 @@ bool transportInit(void)
 	return result;
 }
 
-void transportSetAddress(uint8_t address)
+void transportSetAddress(const uint8_t address)
 {
 	RFM95_setAddress(address);
 }
@@ -42,7 +42,7 @@ uint8_t transportGetAddress(void)
 	return RFM95_getAddress();
 }
 
-bool transportSend(uint8_t to, const void* data, uint8_t len)
+bool transportSend(const uint8_t to, const void* data, const uint8_t len)
 {
 	return RFM95_sendWithRetry(to, data, len);
 }
@@ -67,7 +67,26 @@ void transportPowerDown(void)
 	(void)RFM95_sleep();
 }
 
-int16_t transportGetSignalStrength(void)
+// experimental
+// **********************************************
+int16_t transportGetReceivingSignalStrength(void)
 {
-	return RFM95_getRSSI();
+	return RFM95_getReceivingRSSI();
 }
+int16_t transportGetSendingSignalStrength(void)
+{
+	return RFM95_getSendingRSSI();
+}
+int8_t transportGetReceivingSNR(void)
+{
+	return RFM95_getReceivingSNR();
+}
+int8_t transportGetSendingSNR(void)
+{
+	return RFM95_getSendingSNR();
+}
+uint8_t transportGetTxPower(void)
+{
+	return RFM95_getTxPowerPercent();
+}
+// **********************************************

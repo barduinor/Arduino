@@ -103,7 +103,7 @@
 * @brief Interval to dump content of routing table to eeprom
 */
 #ifndef MY_ROUTING_TABLE_SAVE_INTERVAL_MS
-#define MY_ROUTING_TABLE_SAVE_INTERVAL_MS	(10*60*1000ul)
+#define MY_ROUTING_TABLE_SAVE_INTERVAL_MS	(30*60*1000ul)
 #endif
 /**
 * @def MY_TRANSPORT_SANITY_CHECK
@@ -114,17 +114,17 @@
 
 /**
 * @def MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
-* @brief Interval (in ms) of transport sanity checks
+* @brief Interval (in ms) for transport sanity checks
 */
 #ifndef MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS
-#define MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS (60*1000ul)
+#define MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS (15*60*1000ul)
 #endif
 /**
 * @def MY_TRANSPORT_DISCOVERY_INTERVAL_MS
 * @brief This is a gateway-only feature: Interval (in ms) to issue network discovery checks
 */
 #ifndef MY_TRANSPORT_DISCOVERY_INTERVAL_MS
-#define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (10*60*1000ul)
+#define MY_TRANSPORT_DISCOVERY_INTERVAL_MS (20*60*1000ul)
 #endif
 
 /**
@@ -903,12 +903,12 @@
 #endif
 
 /**
- * @def MY_IS_SERIAL_PTY
+ * @def MY_LINUX_IS_SERIAL_PTY
  * @brief Set serial as a pseudo terminal.
  *
  * Enable this if you need to connect to a controller running on the same device.
  */
-//#define MY_IS_SERIAL_PTY
+//#define MY_LINUX_IS_SERIAL_PTY
 
 /**
  * @def MY_LINUX_SERIAL_PTY
@@ -956,7 +956,7 @@
 #define MY_NODE_LOCK_FEATURE
 #define MY_REPEATER_FEATURE
 #define MY_LINUX_SERIAL_GROUPNAME
-#define MY_IS_SERIAL_PTY
+#define MY_LINUX_IS_SERIAL_PTY
 #define MY_RFM95_ATC_MODE_DISABLED
 #define MY_RFM95_RST_PIN
 #endif
