@@ -31,28 +31,35 @@
 *  Serial and debug options
 ***********************************/
 
-// Enable MY_DEBUG in sketch to show debug prints. This option will add a lot to the size of the
-// final sketch but is helpful to see what is actually is happening during development
+/**
+* @def MY_DEBUG
+* @brief Enable MY_DEBUG in sketch to show debug prints. This option will add a lot to the size of the
+* final sketch but is helpful to see what is actually is happening during development
+*/
 //#define MY_DEBUG
 
-// Enable MY_SPECIAL_DEBUG in sketch to activate I_DEBUG messages if MY_DEBUG is disabled.
-// I_DEBUG requests are:
-// R: routing info (only repeaters): received msg XXYY (as stream), where XX is the node and YY the routing node
-// V: CPU voltage
-// F: CPU frequency
-// M: free memory
-// E: clear MySensors EEPROM area and reboot (i.e. "factory" reset)
+/**
+* @def MY_SPECIAL_DEBUG
+* @brief Enable MY_SPECIAL_DEBUG in sketch to activate I_DEBUG messages if MY_DEBUG is disabled.
+* I_DEBUG requests are:
+* R: routing info (only repeaters): received msg XXYY (as stream), where XX is the node and YY the routing node
+* V: CPU voltage
+* F: CPU frequency
+* M: free memory
+* E: clear MySensors EEPROM area and reboot (i.e. "factory" reset)
+*/
 //#define MY_SPECIAL_DEBUG
 
-// Enable MY_DEBUG_VERBOSE_SIGNING flag for verbose debug prints related to signing.
-// Requires DEBUG to be enabled.
-// This will add even more to the size of the final sketch!
-//#define MY_DEBUG_VERBOSE_SIGNING
-
-// Enable this in sketch if you want to use TX(1), RX(0) as normal I/O pin
+/**
+* @def MY_DISABLED_SERIAL
+* @brief Enable MY_DISABLED_SERIAL in sketch if you want to use TX(1), RX(0) as normal I/O pins
+*/
 //#define MY_DISABLED_SERIAL
 
-// Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
+/**
+* @def MY_CORE_ONLY
+* @brief Enable MY_CORE_ONLY flag if you want to use core functions without loading the framework
+*/
 //#define MY_CORE_ONLY
 
 // Turn off debug if serial pins is used for other stuff
@@ -359,6 +366,12 @@
 *  Message Signing Settings
 ***********************************/
 /**
+* @def Enable MY_DEBUG_VERBOSE_SIGNING
+* @brief Flag for verbose debug prints related to signing. Requires DEBUG to be enabled. This will add even more to the size of the final sketch!
+*/
+//#define MY_DEBUG_VERBOSE_SIGNING
+
+/**
  * @def MY_SIGNING_ATSHA204
  * @brief Enables HW backed signing functionality in library.
  *
@@ -516,6 +529,8 @@
 #define MY_RF24_CS_PIN 3
 #elif defined(LINUX_ARCH_RASPBERRYPI)
 #define MY_RF24_CS_PIN 24
+#elif defined(ARDUINO_ARCH_STM32F1)
+#define MY_RF24_CS_PIN SS
 #else
 #define MY_RF24_CS_PIN 10
 #endif
@@ -667,6 +682,14 @@
 #endif
 
 /**
+* @def MY_RF69_IRQ_NUM
+* @brief RF69 IRQ pin number.
+*/
+#ifndef MY_RF69_IRQ_NUM
+#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
+#endif
+
+/**
  * @def MY_RF69_SPI_CS
  * @brief RF69 SPI chip select pin.
  */
@@ -674,16 +697,13 @@
 #define MY_RF69_SPI_CS RF69_SPI_CS
 #endif
 
+
 /**
- * @def MY_RF69_IRQ_NUM
- * @brief RF69 IRQ pin number.
- */
-#ifndef MY_RF69_IRQ_NUM
-#if defined(ARDUINO_ARCH_ESP8266)
-#define MY_RF69_IRQ_NUM RF69_IRQ_PIN
-#else
-#define MY_RF69_IRQ_NUM RF69_IRQ_NUM
-#endif
+* @def MY_RF69_SPI_CLOCK_DIV
+* @brief RF69 SPI Clock divider.
+*/
+#ifndef MY_RF69_SPI_CLOCK_DIV
+#define MY_RF69_SPI_CLOCK_DIV RF69_SPI_CLOCK_DIV
 #endif
 
 // Enables RFM69 encryption (all nodes and gateway must have this enabled, and all must be personalized with the same AES key)
@@ -791,6 +811,12 @@
 #define MY_PORT 5003
 #endif
 #endif
+
+/**
+ * @def MY_MQTT_CLIENT_PUBLISH_RETAIN
+ * @brief Enables MQTT client to set the retain flag when publishing specific messages.
+ */
+//#define MY_MQTT_CLIENT_PUBLISH_RETAIN
 
 // Static ip address of gateway (if this is disabled, DHCP will be used)
 //#define MY_IP_ADDRESS 192,168,178,66
@@ -945,6 +971,9 @@
 // Doxygen specific constructs, not included when built normally
 // This is used to enable disabled macros/definitions to be included in the documentation as well.
 #if DOXYGEN
+#define MY_DEBUG
+#define MY_SPECIAL_DEBUG
+#define MY_DISABLED_SERIAL
 #define MY_SIGNING_ATSHA204
 #define MY_SIGNING_SOFT
 #define MY_SIGNING_REQUEST_SIGNATURES
@@ -966,4 +995,5 @@
 #define MY_RFM95_ATC_MODE_DISABLED
 #define MY_RFM95_RST_PIN
 #define MY_INDICATION_HANDLER
+#define MY_MQTT_CLIENT_PUBLISH_RETAIN
 #endif
