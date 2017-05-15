@@ -19,8 +19,8 @@
  * Based on TMRh20 RF24 library, Copyright (c) 2015 Charles-Henri Hallard <tmrh20@gmail.com>
  */
 
-#ifndef SPI_H
-#define	SPI_H
+#ifndef SPIDEV_h
+#define SPIDEV_h
 
 #include <stdint.h>
 #include <string>
@@ -33,6 +33,7 @@
 
 #define SPI_CLOCK_BASE 16000000		// 16Mhz
 
+#define SPI_CLOCK_DIV1 1
 #define SPI_CLOCK_DIV2 2
 #define SPI_CLOCK_DIV4 4
 #define SPI_CLOCK_DIV8 8
@@ -40,6 +41,7 @@
 #define SPI_CLOCK_DIV32 32
 #define SPI_CLOCK_DIV64 64
 #define SPI_CLOCK_DIV128 128
+#define SPI_CLOCK_DIV256 256
 
 // SPI Data mode
 #define SPI_MODE0 SPI_MODE_0
@@ -102,17 +104,20 @@ private:
 		dmode = dataMode;
 	}
 
-	friend class SPIClass;
+	friend class SPIDEVClass;
 };
 
-class SPIClass
+/**
+ * SPIDEV class
+ */
+class SPIDEVClass
 {
 
 public:
 	/**
-	 * @brief SPIClass constructor.
+	 * @brief SPIDEVClass constructor.
 	 */
-	SPIClass();
+	SPIDEVClass();
 	/**
 	 * @brief Start SPI operations.
 	 */
@@ -201,6 +206,6 @@ private:
 	static void init();
 };
 
-extern SPIClass SPI;
+extern SPIDEVClass SPIDEV;
 
 #endif
