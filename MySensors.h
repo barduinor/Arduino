@@ -76,6 +76,12 @@
 // transport layer files
 #define debug(x,...)			DEBUG_OUTPUT(x, ##__VA_ARGS__)	//!< debug
 
+// temp. workaround for nRF5 verifier: redirect RF24 to NRF_ESB
+#if defined(ARDUINO_ARCH_NRF5) && (defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF24) )
+#undef MY_RADIO_RF24
+#undef MY_RADIO_NRF24
+#define MY_RADIO_NRF5_ESB
+#endif
 
 // Enable sensor network "feature" if one of the transport types was enabled
 #if defined(MY_RADIO_RF24) || defined(MY_RADIO_NRF5_ESB) || defined(MY_RADIO_RFM69) || defined(MY_RADIO_RFM95) || defined(MY_RS485)
@@ -97,6 +103,8 @@
 #include "drivers/NVM/VirtualPage.cpp"
 #include "drivers/NVM/NVRAM.cpp"
 #include "hal/architecture/MyHwNRF5.cpp"
+#elif defined(__arm__) && defined(TEENSYDUINO)
+#include "hal/architecture/MyHwTeensy3.cpp"
 #elif defined(__linux__)
 #include "hal/architecture/MyHwLinuxGeneric.cpp"
 #endif
@@ -334,10 +342,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 
 // Transport drivers
 #if defined(MY_RADIO_RF24)
-#if defined(__linux__) && !(defined(LINUX_SPI_BCM) || defined(LINUX_SPI_SPIDEV))
-#error No support for nRF24 radio on this platform
-#endif
-
 #if defined(MY_RF24_ENABLE_ENCRYPTION)
 #include "drivers/AES/AES.cpp"
 #endif
@@ -427,6 +431,8 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "hal/architecture/MyMainLinux.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
 #include "hal/architecture/MyMainSTM32F1.cpp"
+#elif defined(TEENSYDUINO)
+#include "hal/architecture/MyMainTeensy3.cpp"
 #else
 #include "hal/architecture/MyMainDefault.cpp"
 #endif

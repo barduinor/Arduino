@@ -1,4 +1,4 @@
-/**
+﻿/**
  * The MySensors Arduino library handles the wireless radio link and protocol
  * between your home built sensors/actuators and HA controller of choice.
  * The sensors forms a self healing radio network with optional repeaters. Each
@@ -43,6 +43,10 @@
 #include <nrf.h>
 
 #define snprintf_P(s, f, ...) snprintf((s), (f), __VA_ARGS__)
+#define printf_P printf
+
+#define MIN(a,b) min(a,b)
+#define MAX(a,b) max(a,b)
 
 // Define these as macros to save valuable space
 #define hwDigitalWrite(__pin, __value) digitalWrite(__pin, __value)
@@ -58,6 +62,8 @@ void hwWriteConfigBlock(void *buf, void *adr, size_t length);
 void hwWriteConfig(int adr, uint8_t value);
 uint8_t hwReadConfig(int adr);
 void hwRandomNumberInit();
+ssize_t hwGetentropy(void *__buffer, size_t __length);
+#define MY_HW_HAS_GETENTROPY
 
 #ifndef MY_SERIALDEVICE
 #define MY_SERIALDEVICE Serial
@@ -109,8 +115,24 @@ static __inline__ void __priMaskRestore(const uint32_t *priMask)
 #define MY_HW_RTC_IRQN RTC0_IRQn
 #endif
 
+/** Datastructure for AES ECB unit
+ */
+typedef struct {
+	/** AES Key
+	 */
+	uint8_t key[16];
+	/** Unencrypted data
+	 */
+	uint8_t cleartext[16];
+	/** Encrypted data
+	 */
+	uint8_t ciphertext[16];
+} nrf_ecb_t;
+
 #ifndef DOXYGEN
-#define MY_CRITICAL_SECTION                                                    \
+#define MY_CRITICAL_SECTION
+// temp. commented, to fix "CircularBuffer.h:94:2: warning: control reaches end of non-void function" error
+#define __MY_CRITICAL_SECTION                                                    \
 	for (uint32_t __savePriMask                                                  \
 	        __attribute__((__cleanup__(__priMaskRestore))) = __get_PRIMASK(),       \
 	        __ToDo = __disableIntsRetVal();                                         \
